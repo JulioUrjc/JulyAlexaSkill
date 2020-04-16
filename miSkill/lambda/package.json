@@ -1,0 +1,16 @@
+{
+  "name": "ukelelemix",
+  "version": "1.0.0",
+  "description": "Los nombres de todas las personas de la casa",
+  "main": "index.js",
+  "scripts": {
+    "test": ""
+  },
+  "author": "Julio Martin",
+  "license": "LGPL-3.0-or-later",
+  "dependencies": {
+    "ask-sdk": "^2.8.0",
+    "i18next": "^15.0.5",
+    "i18next-sprintf-postprocessor": "^0.2.2"
+  }
+}

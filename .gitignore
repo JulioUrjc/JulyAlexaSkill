@@ -1,3 +1,10 @@
+# Paths and files
+./miSkill/lambda/node_modules
+./miSkill/lambda/asl-config.json
+./miSkill/lambda/package-lock.json
+./testmiSkill/node_modules
+./testmiSkill/package-lock.json
+
 # Logs
 logs
 *.log

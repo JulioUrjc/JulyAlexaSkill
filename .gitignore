@@ -1,6 +1,8 @@
 # Paths
 ./miSkill/lambda/node_modules
 ./testmiSkill/node_modules
+./DinamoDB
+./aws-cli
 
 # Logs
 logs

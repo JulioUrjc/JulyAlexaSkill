@@ -30,11 +30,22 @@ function getPersistenceAdapter(tableName) {
             bucketName: process.env.S3_PERSISTENCE_BUCKET
         });
     } else {
+
+        var awsSdk = require('aws-sdk');
+        var myDynamoDB = new awsSdk.DynamoDB({
+            endpoint: 'http://localhost:8000',
+            accessKeyId: 'Julio',
+            secretAccessKey: 'july',
+            region: 'eu-west-1',
+            apiVersion: 'latest'
+        });
+
         // IMPORTANT: don't forget to give DynamoDB access to the role you're using to run this lambda (via IAM policy)
         const {DynamoDbPersistenceAdapter} = require('ask-sdk-dynamodb-persistence-adapter');
         return new DynamoDbPersistenceAdapter({
             tableName: tableName || 'happy_birthday',
-            createTable: true
+            createTable: true,
+            dynamoDBClient: myDynamoDB
         });
     }
 }
@@ -44,8 +55,23 @@ const LaunchRequestHandler = {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
     },
     handle(handlerInput) {
-        const speechText = handlerInput.t('WELCOME_MSG');
+        const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
+        const day = sessionAttributes['day'];
+        const monthName = sessionAttributes['monthName'];
+        const year = sessionAttributes['year'];
+        const sessionCounter = sessionAttributes['sessionCounter'];
+
+        const dateAvailable = day && monthName && year;
+        if (dateAvailable) {
+            // we can't use intent chaining because the target intent is not dialog based
+            return SayBirthdayIntentHandler.handle(handlerInput);
+        }
+
+        let speechText = !sessionCounter ? handlerInput.t('WELCOME_MSG') : handlerInput.t('WELCOME_BACK_MSG');
+        speechText += handlerInput.t('MISSING_MSG');
+
+        // we use intent chaining to trigger the birthday registration multi-turn
         return handlerInput.responseBuilder
             .speak(speechText)
             // we use intent chaining to trigger the birthday registration multi-turn
@@ -122,7 +148,7 @@ const SayBirthdayIntentHandler = {
         let speechText = '';
         const dateAvailable = day && month && year;
         if (dateAvailable){
-            const timezone = 'Europe/Rome'; // provide yours here. we'll change this later to retrieve the timezone from the device
+            const timezone = 'Europe/Madrid'; // provide yours here. we'll change this later to retrieve the timezone from the device
             const today = moment().tz(timezone).startOf('day');
             const wasBorn = moment(`${month}/${day}/${year}`, "MM/DD/YYYY").tz(timezone).startOf('day');
             const nextBirthday = moment(`${month}/${day}/${today.year()}`, "MM/DD/YYYY").tz(timezone).startOf('day');
@@ -328,6 +354,7 @@ exports.handler = Alexa.SkillBuilders.custom()
     .addRequestHandlers(
         LaunchRequestHandler,
         RegisterBirthdayIntentHandler,
+        SayBirthdayIntentHandler,
         HelpIntentHandler,
         CancelAndStopIntentHandler,
         FallbackIntentHandler,
@@ -342,6 +369,6 @@ exports.handler = Alexa.SkillBuilders.custom()
     .addResponseInterceptors(
         LoggingResponseInterceptor,
         SaveAttributesResponseInterceptor)
-    .withPersistantAdapter(
-        PersistenceAdapter)
+    .withPersistenceAdapter(
+        persistenceAdapter)
     .lambda();

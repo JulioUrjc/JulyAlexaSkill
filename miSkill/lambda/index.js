@@ -1,54 +1,15 @@
-
-// This sample demonstrates handling intents from an Alexa skill using the Alexa Skills Kit SDK (v2).
-// Please visit https://alexa.design/cookbook for additional examples on implementing slots, dialog management,
-// session persistence, api calls, and more.
 const Alexa = require('ask-sdk-core');
-// i18n library dependency, we use it below in a localisation interceptor
-const i18n = require('i18next');
-const sprintf = require('i18next-sprintf-postprocessor');
-// Get an instance of the persistence adapter
-var persistenceAdapter = getPersistenceAdapter();
 // Moments library will help us do all the birthday math
 const moment = require('moment-timezone');
-
-const languageStrings = require('./languajes/languajes');
-
+// Get an instance of the persistence adapter
+const interceptors = require('./interceptors.js');
+const persistence  = require('./persistence.js');
 //const languageStrings = {
 //    'es' : require('./languajes/es'),
 //    //'it' : require('./i18n/it'),
 //    // ... etc
 //}
 
-function getPersistenceAdapter(tableName) {
-    // This function is an indirect way to detect if this is part of an Alexa-Hosted skill
-    function isAlexaHosted() {
-        return process.env.S3_PERSISTENCE_BUCKET;
-    }
-    if (isAlexaHosted()) {
-        const {S3PersistenceAdapter} = require('ask-sdk-s3-persistence-adapter');
-        return new S3PersistenceAdapter({
-            bucketName: process.env.S3_PERSISTENCE_BUCKET
-        });
-    } else {
-
-        var awsSdk = require('aws-sdk');
-        var myDynamoDB = new awsSdk.DynamoDB({
-            endpoint: 'http://localhost:8000',
-            accessKeyId: 'Julio',
-            secretAccessKey: 'july',
-            region: 'eu-west-1',
-            apiVersion: 'latest'
-        });
-
-        // IMPORTANT: don't forget to give DynamoDB access to the role you're using to run this lambda (via IAM policy)
-        const {DynamoDbPersistenceAdapter} = require('ask-sdk-dynamodb-persistence-adapter');
-        return new DynamoDbPersistenceAdapter({
-            tableName: tableName || 'happy_birthday',
-            createTable: true,
-            dynamoDBClient: myDynamoDB
-        });
-    }
-}
 
 const LaunchRequestHandler = {
     canHandle(handlerInput) {
@@ -60,15 +21,15 @@ const LaunchRequestHandler = {
         const day = sessionAttributes['day'];
         const monthName = sessionAttributes['monthName'];
         const year = sessionAttributes['year'];
+        const name = sessionAttributes['name'] || '';
         const sessionCounter = sessionAttributes['sessionCounter'];
 
-        const dateAvailable = day && monthName && year;
-        if (dateAvailable) {
+        if (day && monthName && year) {
             // we can't use intent chaining because the target intent is not dialog based
             return SayBirthdayIntentHandler.handle(handlerInput);
         }
 
-        let speechText = !sessionCounter ? handlerInput.t('WELCOME_MSG') : handlerInput.t('WELCOME_BACK_MSG');
+        let speechText = !sessionCounter ? handlerInput.t('WELCOME_MSG', {name: name}) : handlerInput.t('WELCOME_BACK_MSG', {name: name});
         speechText += handlerInput.t('MISSING_MSG');
 
         // we use intent chaining to trigger the birthday registration multi-turn
@@ -144,11 +105,18 @@ const SayBirthdayIntentHandler = {
         const day = sessionAttributes['day'];
         const month = sessionAttributes['month']; //MM
         const year = sessionAttributes['year'];
+        const name = sessionAttributes['name'] || '';
+        let timezone = sessionAttributes['timezone'];
 
         let speechText = '';
-        const dateAvailable = day && month && year;
-        if (dateAvailable){
-            const timezone = 'Europe/Madrid'; // provide yours here. we'll change this later to retrieve the timezone from the device
+        if (day && month && year){
+            if (!timezone){
+                //timezone = 'Europe/Madrid';  // so it works on the simulator, you should uncomment this line, replace with your time zone and comment sentence below
+                return handlerInput.responseBuilder
+                    .speak(handlerInput.t('NO_TIMEZONE_MSG'))
+                    .getResponse();
+            }
+
             const today = moment().tz(timezone).startOf('day');
             const wasBorn = moment(`${month}/${day}/${year}`, "MM/DD/YYYY").tz(timezone).startOf('day');
             const nextBirthday = moment(`${month}/${day}/${today.year()}`, "MM/DD/YYYY").tz(timezone).startOf('day');
@@ -157,10 +125,11 @@ const SayBirthdayIntentHandler = {
             }
             const age = today.diff(wasBorn, 'years');
             const daysUntilBirthday = nextBirthday.startOf('day').diff(today, 'days'); // same days returns 0
-            speechText = handlerInput.t('DAYS_LEFT_MSG', {count: daysUntilBirthday});
+            speechText = handlerInput.t('DAYS_LEFT_MSG', {name: name, count: daysUntilBirthday});
             speechText += handlerInput.t('WILL_TURN_MSG', {count: age + 1});
             if (daysUntilBirthday === 0) { // it's the user's birthday!
-                speechText = handlerInput.t('GREET_MSG', {count: age});
+                speechText = handlerInput.t('GREET_MSG', {name: name});
+                speechText += handlerInput.t('NOW_TURN_MSG', {count: age});
             }
             speechText += handlerInput.t('POST_SAY_HELP_MSG');
         } else {
@@ -282,68 +251,7 @@ const ErrorHandler = {
     }
 };
 
-// This request interceptor will log all incoming requests to this lambda
-const LoggingRequestInterceptor = {
-    process(handlerInput) {
-        console.log(`Incoming request: ${JSON.stringify(handlerInput.requestEnvelope)}`);
-    }
-};
 
-// This response interceptor will log all outgoing responses of this lambda
-const LoggingResponseInterceptor = {
-    process(handlerInput, response) {
-        console.log(`Outgoing response: ${JSON.stringify(response)}`);
-    }
-};
-
-// This request interceptor will bind a translation function 't' to the handlerInput
-const LocalisationRequestInterceptor = {
-    process(handlerInput) {
-        i18n.init({
-            lng: Alexa.getLocale(handlerInput.requestEnvelope),
-            //fallbacklng: es,
-            OverloadTranslationOptionHandler: sprintf.overloadTranslatiOnoptionHandler,
-            resources: languageStrings
-        }).then((t) => {
-            handlerInput.t = (...args) => t(...args);
-        });
-    }
-};
-
-/* *
- * Below we use async and await ( more info: javascript.info/async-await )
- * It's a way to wrap promises and waait for the result of an external async operation
- * Like getting and saving the persistent attributes
- * */
-const LoadAttributesRequestInterceptor = {
-    async process(handlerInput) {
-        const {attributesManager, requestEnvelope} = handlerInput;
-        if (Alexa.isNewSession(requestEnvelope)){ //is this a new session? this check is not enough if using auto-delegate (more on next module)
-            const persistentAttributes = await attributesManager.getPersistentAttributes() || {};
-            console.log('Loading from persistent storage: ' + JSON.stringify(persistentAttributes));
-            //copy persistent attribute to session attributes
-            attributesManager.setSessionAttributes(persistentAttributes); // ALL persistent attributtes are now session attributes
-        }
-    }
-};
-
-// If you disable the skill and reenable it the userId might change and you loose the persistent attributes saved below as userId is the primary key
-const SaveAttributesResponseInterceptor = {
-    async process(handlerInput, response) {
-        if (!response) return; // avoid intercepting calls that have no outgoing response due to errors
-        const {attributesManager, requestEnvelope} = handlerInput;
-        const sessionAttributes = attributesManager.getSessionAttributes();
-        const shouldEndSession = (typeof response.shouldEndSession === "undefined" ? true : response.shouldEndSession); //is this a session end?
-        if (shouldEndSession || Alexa.getRequestType(requestEnvelope) === 'SessionEndedRequest') { // skill was stopped or timed out
-            // we increment a persistent session counter here
-            sessionAttributes['sessionCounter'] = sessionAttributes['sessionCounter'] ? sessionAttributes['sessionCounter'] + 1 : 1;
-            // we make ALL session attributes persistent
-            console.log('Saving to persistent storage:' + JSON.stringify(sessionAttributes));
-            attributesManager.setPersistentAttributes(sessionAttributes);
-            await attributesManager.savePersistentAttributes();
-        }
-    }
-};
 
 /**
  * This handler acts as the entry point for your skill, routing all request and response
@@ -363,12 +271,15 @@ exports.handler = Alexa.SkillBuilders.custom()
     .addErrorHandlers(
         ErrorHandler)
     .addRequestInterceptors(
-        LocalisationRequestInterceptor,
-        LoggingRequestInterceptor,
-        LoadAttributesRequestInterceptor)
+        interceptors.LocalisationRequestInterceptor,
+        interceptors.LoggingRequestInterceptor,
+        interceptors.LoadAttributesRequestInterceptor,
+        interceptors.LoadNameRequestInterceptor,
+        interceptors.LoadTimezoneRequestInterceptor)
     .addResponseInterceptors(
-        LoggingResponseInterceptor,
-        SaveAttributesResponseInterceptor)
+        interceptors.LoggingResponseInterceptor,
+        interceptors.SaveAttributesResponseInterceptor)
     .withPersistenceAdapter(
-        persistenceAdapter)
+        persistence.getPersistenceAdapter())
+    .withApiClient(new Alexa.DefaultApiClient())
     .lambda();

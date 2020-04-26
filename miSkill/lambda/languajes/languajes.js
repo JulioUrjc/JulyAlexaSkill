@@ -15,14 +15,20 @@ const languageStrings = {
             NOW_TURN_MSG: `You're now {{count}} year old! `,
             NOW_TURN_MSG_plural: `You're now {{count}} years old! `,
             MISSING_MSG: `$t(DOUBT_SPEECHCON). It looks like you haven't told me your birthday yet. `,
-            POST_SAY_HELP_MSG: `If you want to change the date, try saying, register my birthday. Or just say the date directly. What would you like to do next? `,
-            HELP_MSG: 'I can remember your birthday if you tell me the date. Or I can tell you the remaining days until your next birthday. Which one would you like to try? ',
+            POST_SAY_HELP_MSG: `If you want to change the date, try saying, register my birthday. You can also try to set up a reminder for your birthday. What would you like to do next? `,
+            HELP_MSG: 'I can remember your birthday if you tell me the date. Or I can tell you the remaining days until your next birthday. Also, you can create a reminder so you never forget about your birthday. Which one would you like to try? ',
             REPROMPT_MSG: `If you're not sure what to do next try asking for help. If you want to leave just say stop. What would you like to do next? `,
             GOODBYE_MSG: ['Goodbye {{name}}! ', 'So long {{name}}! ', 'See you later {{name}}! ', 'Cheers {{name}}! '],
             REFLECTOR_MSG: 'You just triggered {{intent}}',
             FALLBACK_MSG: `Sorry, I don't know about that. Please try again.`,
             ERROR_MSG: 'Sorry, there was an error. Please try again.',
             NO_TIMEZONE_MSG: `I can't determine your timezone. Please check your device settings and make sure a timezone was selected. After that please reopen the skill and try again!`,
+            REMINDER_CREATED_MSG: '{{name}} your reminder has been created successfully. ',
+            REMINDER_ERROR_MSG: 'Sorry, there was an error creating the reminder. ',
+            UNSUPPORTED_DEVICE_MSG: `This device doesn't support this operation. `,
+            CANCEL_MSG: `Ok. Let's cancel that. `,
+            MISSING_PERMISSION_MSG: `It looks like you haven't granted permissions for reminders. I have just sent you a card to your Alexa app so you can quickly enable this. `,
+            POST_REMINDER_HELP_MSG: `If you want to know when your reminder will trigger, you can say, how many days until my birthday. What would you like to do next?`
         }
     },
     es: {
@@ -41,14 +47,20 @@ const languageStrings = {
             NOW_TURN_MSG: 'Hoy cumples {{count}} año! ',
             NOW_TURN_MSG_plural: 'Hoy cumples {{count}} años! ',
             MISSING_MSG: '$t(DOUBT_SPEECHCON). Parece que aun no me has dicho tu fecha de cumpleaños. ',
-            POST_SAY_HELP_MSG: `Si quieres cambiar la fecha puedes decir, registra mi cumpleaños. O sólo dime la fecha directamente. Qué quieres hacer? `,
-            HELP_MSG: 'Puedo recordar tu cumpleaños si me dices una fecha. O decirte cuanto falta para que cumplas. Qué quieres hacer? ',
+            POST_SAY_HELP_MSG: `Si quieres cambiar la fecha puedes decir, registra mi cumpleaños. También puedes crear un recordatorio para cuando cumplas. Qué quieres hacer? `,
+            HELP_MSG: 'Puedo recordar tu cumpleaños si me dices una fecha. O decirte cuanto falta para que cumplas. También puedes crear un recordatorio para que nunca olides tu cumpleaños. Qué quieres hacer? ',
             REPROMPT_MSG: 'Si no sabes como continuar intent pedir ayuda. Si quieres salir solo dí para. Qué quieres hacer? ',
             GOODBYE_MSG: ['Hasta luego {{name}}! ', 'Adios {{name}}! ', 'Hasta pronto {{name}}! ', 'Nos vemos {{name}}! '],
             REFLECTOR_MSG: 'Acabas de activar {{intent}}',
             FALLBACK_MSG: 'Lo siento, no se nada sobre eso. Por favor inténtalo otra vez. ',
             ERROR_MSG: 'Lo siento, ha habido un problema. Por favor inténtalo otra vez. ',
-            NO_TIMEZONE_MSG: 'No he podido determinar tu zona horaria. Verifica la configuración de tu dispositivo, abre otraa vez la skill e inténtalo otra vez.'
+            NO_TIMEZONE_MSG: 'No he podido determinar tu zona horaria. Verifica la configuración de tu dispositivo, abre otraa vez la skill e inténtalo otra vez.',
+            REMINDER_CREATED_MSG: '{{name}} Tu recordatorio se ha creado con éxito. ',
+            REMINDER_ERROR_MSG: 'Perdona, ha habido un error al crear el recordatorio. ',
+            UNSUPPORTED_DEVICE_MSG: 'Este dispositivo no soporta la operación que estás intentando realizar. ',
+            CANCEL_MSG: 'Vale. Lo cancelamos. ',
+            MISSING_PERMISSION_MSG: 'Parece que no has autorizado el envío de recordatorios. Te he enviado una tarjeta a la app Alexa para que lo habilites. ',
+            POST_REMINDER_HELP_MSG: 'Si quieres saber cuando se aactivará tu recordatorio puedes decir, cuanto falta para mi cumpleaños. Qué quieres hacer ahora?'
         }
     },
     it: {
@@ -62,20 +74,26 @@ const languageStrings = {
             DAYS_LEFT_MSG: `Manca un giorno `,
             DAYS_LEFT_MSG_plural: 'Mancano {{count}} giorni ',
             WILL_TURN_MSG: `a quando farai un anno. `,
-            WILL_TURN_MSG_plural: `a quando farai {{count}} anni. `,
+            WILL_TURN_MSG_plural: ` a quando farai {{count}} anni. `,
             GREET_MSG: `$t(POSITIVE_SOUND) $t(GREETING_SPEECHCON) {{name}}. `,
             NOW_TURN_MSG: `Hai compiuto un anno `,
             NOW_TURN_MSG_plural: `Hai compiuto {{count}} anni! `,
             MISSING_MSG: `Non mi hai ancora detto quando compi gli anni. `,
-            POST_SAY_HELP_MSG: `Se vuoi cambiare la data, chiedimi di ricordare il tuo compleanno, o dimmi pure direttamente la data. Cosa vuoi fare? `,
-            HELP_MSG: 'Posso ricordarmi il tuo compleanno se mi dici la tua data di nascita. Posso anche dirti tra quanti giorni compi gli anni. Cosa vuoi fare? ',
+            POST_SAY_HELP_MSG: `Puoi cambiare la data dandomene una nuova oppure posso impostare un nuovo promemoria. Cosa vuoi fare? `,
+            HELP_MSG: 'Posso ricordarmi il tuo compleanno se mi dici la tua data di nascita. Posso anche dirti tra quanti giorni compi gli anni e fissare un promemoria. Cosa vuoi fare? ',
             REPROMPT_MSG: `Se non sai cosa fare, prova a chiedermi aiuto. Se vuoi uscire dimmi pure stop. Cosa vuoi fare?`,
             GOODBYE_MSG: ['A presto, {{name}}! ', 'Ciao {{name}}! ', 'Arrivederci {{name}}! ', 'A dopo {{name}}! '],
             REFLECTOR_MSG: 'Hai invocato l\'intento {{intent}}',
             FALLBACK_MSG: 'Perdonami, penso di non aver capito bene. Riprova.',
             ERROR_MSG: 'Scusa, c\'è stato un errore. Riprova.',
-            NO_TIMEZONE_MSG: 'Non ho potuto determinare il tuo fuso orario. Verifica la configurazione del tuo dispositivo, e riprova.'
-        }
+            NO_TIMEZONE_MSG: 'Non ho potuto determinare il tuo fuso orario. Verifica la configurazione del tuo dispositivo, e riprova.',
+            REMINDER_CREATED_MSG: '{{name}}, il promemoria è stato creato con successo. ',
+            REMINDER_ERROR_MSG: 'Si è verificato un errore nel creare il promemoria',
+            UNSUPPORTED_DEVICE_MSG: `Questa funzionalità non è disponibile su questo dispositivo. `,
+            CANCEL_MSG: `Ok, annullato. `,
+            MISSING_PERMISSION_MSG: `Non mi ha ancora dato accesso a creare promemoria. Ti ho appena inviato una card alla tua app. `,
+            POST_REMINDER_HELP_MSG: `Se vuoi sapere quanto manca al tuo promemoria, chiedimi quanti giorni mancano al tuo compleanno. Come vuoi procedere? `
+       },
     },
     fr: {
         translation: {
@@ -100,14 +118,21 @@ const languageStrings = {
             REFLECTOR_MSG: 'Vous avez invoqué l\'intention {{intent}}',
             FALLBACK_MSG: 'Désolé, je ne sais pas répondre à votre demande. Pouvez-vous reformuler?. ',
             ERROR_MSG: 'Désolé, je n\'ai pas compris. Pouvez-vous reformuler? ',
-            NO_TIMEZONE_MSG: 'Je n\'ai pas réussi à déterminer votre fuseau horaire. Veuillez vérifier les paramètres de votre appareil et réessayez.'
+            NO_TIMEZONE_MSG: 'Je n\'ai pas réussi à déterminer votre fuseau horaire. Veuillez vérifier les paramètres de votre appareil et réessayez.',
+            REMINDER_CREATED_MSG: '{{name}} Votre rappel vient d\'être créé avec succès. ',
+            REMINDER_ERROR_MSG: 'Il y a eu un problème pendant la création du rappel. ',
+            UNSUPPORTED_DEVICE_MSG: 'Votre appareil ne supporte pas la création de rappels. ',
+            CANCEL_MSG: 'Ok, J\'ai annulé la demande de rappel. ',
+            MISSING_PERMISSION_MSG: 'Je n\'ai pas accès à la création de rappels. Veuillez accéder à votre application Alexa et suivez les instructions depuis la card que je vous ai envoyé. ',
+            POST_REMINDER_HELP_MSG: `Pour connaître quand votre rappel se déclenchera, il suffit de me dire "combien de jours reste-t-il avant mon anniversaire". Que voulez-vous faire ?`
         }
     },
     "fr-CA" : {
         translation: {
             WELCOME_MSG: 'Bienvenue sur la Skill des fêtes {{name}}! ',
             POST_SAY_HELP_MSG: `Si vous souhaitez changez votre date de naissance, dites simplement "sauve ma fête" ou bien dites moi directement votre date de naissance. Quel est votre choix ?`,
-            HELP_MSG: 'Je peux me souvenir de votre fête et vous dire le nombre de jours restant avant de le célébrer. Quel est votre choix ?'
+            HELP_MSG: 'Je peux me souvenir de votre fête et vous dire le nombre de jours restant avant de le célébrer. Quel est votre choix ?',
+            POST_REMINDER_HELP_MSG: `Pour connaître quand votre rappel se déclenchera, il suffit de me dire "combien de jours reste-t-il avant ma fête". Que voulez-vous faire ?`
         }
     }
 }

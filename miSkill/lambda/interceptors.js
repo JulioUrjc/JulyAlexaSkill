@@ -3,11 +3,7 @@ const Alexa = require('ask-sdk-core');
 const i18n = require('i18next');
 const sprintf = require('i18next-sprintf-postprocessor');
 const languageStrings = require('./languajes/languajes');
-
-// we now specify which attributes are saved (see the save interceptor below)
-const PERSISTENT_ATTRIBUTES_NAMES = ['day', 'month', 'monthName', 'year', 'sessionCounter'];
-// these are the permissions needed to get the first name
-const GIVEN_NAME_PERMISSION = ['alexa::profile:given_name:read'];
+const constants = require('./constants'); // constants such as specific service permissions go here
 
 // This request interceptor will log all incoming requests to this lambda
 const LoggingRequestInterceptor = {
@@ -26,14 +22,22 @@ const LoggingResponseInterceptor = {
 // This request interceptor will bind a translation function 't' to the handlerInput
 const LocalisationRequestInterceptor = {
     process(handlerInput) {
-        i18n.init({
+        const localisationClient = i18n.init({
             lng: Alexa.getLocale(handlerInput.requestEnvelope),
-            //fallbacklng: es,
-            OverloadTranslationOptionHandler: sprintf.overloadTranslatiOnoptionHandler,
-            resources: languageStrings
-        }).then((t) => {
-            handlerInput.t = (...args) => t(...args);
+            resources: languageStrings,
+            returnObjects: true
         });
+        localisationClient.localise = function localise() {
+            const args = arguments;
+            const value = i18n.t(...args);
+            if (Array.isArray(value)) {
+                return value[Math.floor(Math.random() * value.length)];
+            }
+            return value;
+        };
+        handlerInput.t = function translate(...args) {
+            return localisationClient.localise(...args);
+        }
     }
 };
 
@@ -45,9 +49,12 @@ const LocalisationRequestInterceptor = {
 const LoadAttributesRequestInterceptor = {
     async process(handlerInput) {
         const {attributesManager, requestEnvelope} = handlerInput;
-        if (Alexa.isNewSession(requestEnvelope)){ //is this a new session? this check is not enough if using auto-delegate (more on next module)
+        const sessionAttributes = attributesManager.getSessionAttributes();
+        // the "loaded" check is because the "new" session flag is lost if there's a one shot utterance that hits an intent with auto-delegate
+        if (Alexa.isNewSession(requestEnvelope) || !sessionAttributes['loaded']){ //is this a new session? not loaded from db?
             const persistentAttributes = await attributesManager.getPersistentAttributes() || {};
             console.log('Loading from persistent storage: ' + JSON.stringify(persistentAttributes));
+            persistentAttributes['loaded'] = true;
             //copy persistent attribute to session attributes
             attributesManager.setSessionAttributes(persistentAttributes); // ALL persistent attributtes are now session attributes
         }
@@ -61,10 +68,16 @@ const SaveAttributesResponseInterceptor = {
         const {attributesManager, requestEnvelope} = handlerInput;
         const sessionAttributes = attributesManager.getSessionAttributes();
         const shouldEndSession = (typeof response.shouldEndSession === "undefined" ? true : response.shouldEndSession); //is this a session end?
-        if (shouldEndSession || Alexa.getRequestType(requestEnvelope) === 'SessionEndedRequest') { // skill was stopped or timed out
+        // the "loaded" check is because the session "new" flag is lost if there's a one shot utterance that hits an intent with auto-delegate
+        const loadedThisSession = sessionAttributes['loaded'];
+        if ((shouldEndSession || Alexa.getRequestType(requestEnvelope) === 'SessionEndedRequest') && loadedThisSession) { // skill was stopped or timed out
             // we increment a persistent session counter here
             sessionAttributes['sessionCounter'] = sessionAttributes['sessionCounter'] ? sessionAttributes['sessionCounter'] + 1 : 1;
-            // we make ALL session attributes persistent
+            // limiting save of session attributes to the ones we want to make persistent
+            for (var key in sessionAttributes) {
+                if (!constants.PERSISTENT_ATTRIBUTES_NAMES.includes(key))
+                    delete sessionAttributes[key];
+            }
             console.log('Saving to persistent storage:' + JSON.stringify(sessionAttributes));
             attributesManager.setPersistentAttributes(sessionAttributes);
             await attributesManager.savePersistentAttributes();

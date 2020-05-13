@@ -89,10 +89,16 @@ function getPersistenceAdapter(tableName) {
         return directiveServiceClient.enqueue(directive, apiEndpoint, apiAccessToken);
     }
 
+    function supportsAPL(handlerInput) {
+        const {supportedInterfaces} = handlerInput.requestEnvelope.context.System.device;
+        return !!supportedInterfaces['Alexa.Presentation.APL'];
+    }
+
 module.exports =
 {
   getPersistenceAdapter,
   createReminder,
   getS3PreSignedUrl,
-  callDirectiveService
+  callDirectiveService,
+  supportsAPL
 }
